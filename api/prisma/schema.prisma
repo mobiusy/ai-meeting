@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(EMPLOYEE)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  department   Department? @relation(fields: [departmentId], references: [id])
+  departmentId String?
+
+  createdMeetings Meeting[] @relation("MeetingCreator")
+  participants    MeetingParticipant[]
+
+  @@map("users")
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@map("departments")
+}
+
+model MeetingRoom {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  capacity    Int
+  location    String
+  description String?
+  equipment   String // JSON array of equipment
+  images      String // JSON array of image URLs
+  status      RoomStatus @default(AVAILABLE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  meetings Meeting[]
+
+  @@map("meeting_rooms")
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  status      MeetingStatus @default(SCHEDULED)
+  isRecurring Boolean   @default(false)
+  recurringRule String? // JSON for recurring rules
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator   User   @relation("MeetingCreator", fields: [creatorId], references: [id])
+  creatorId String
+
+  room   MeetingRoom @relation(fields: [roomId], references: [id])
+  roomId String
+
+  participants MeetingParticipant[]
+
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  id         String   @id @default(cuid())
+  status     ParticipantStatus @default(PENDING)
+  joinedAt   DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  meetingId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@unique([meetingId, userId])
+  @@map("meeting_participants")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+  GUEST
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  DISABLED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  ATTENDED
+}

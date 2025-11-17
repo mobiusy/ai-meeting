@@ -26,7 +26,7 @@
 ├─────────────────────────────────────────────────────────────┤
 │                  API网关层                                  │
 ├─────────────────────────────────────────────────────────────┤
-│              微服务业务层                                    │
+│              后端应用层（模块化单体）                        │
 ├─────────────────────────────────────────────────────────────┤
 │              数据存储层                                     │
 ├─────────────────────────────────────────────────────────────┤
@@ -42,128 +42,89 @@
 - **UI组件库**：Ant Design（React）或 Element Plus（Vue）
 - **构建工具**：Vite/Webpack
 - **移动端**：响应式设计 + PWA
+ - **AI预约入口**：内置对话式预约界面，支持与传统表单视图双向切换与上下文保留
 
 #### 2.2.2 后端架构
-- **API网关**：Kong/Nginx + Lua
-- **微服务框架**：Node.js + Express/Nest.js 或 Java + Spring Boot
-- **服务注册与发现**：Consul/Eureka
-- **配置中心**：Apollo/Nacos
-- **消息队列**：RabbitMQ/Apache Kafka
+ - **API网关**：Nginx（反向代理与路由）
+ - **后端架构**：Node.js + NestJS，采用模块化单体架构（用户、会议、会议室、通知、审计、文件、AI预约模块）
+ - **服务注册与发现**：第一阶段不接入
+ - **配置中心**：第一阶段不接入
+ - **消息队列**：第二阶段可接入RocketMQ 5.3.x（事件通知与异步处理）
+ - **AI预约模块**：意图识别、槽位填充、对话编排与安全防护（后端模块形态）
+ - **LLM网关**：抽象不同LLM提供商，本地/云均可；第一阶段以基础能力为主
 
 #### 2.2.3 数据存储
-- **关系型数据库**：PostgreSQL（主库）+ MySQL（备库）
-- **缓存数据库**：Redis Cluster
-- **文档数据库**：MongoDB（日志和审计数据）
-- **时序数据库**：InfluxDB（监控数据）
-- **对象存储**：MinIO/AWS S3（文件存储）
+ - **关系型数据库**：PostgreSQL（主库）
+ - **缓存数据库**：Redis（会话、热点数据、分布式锁）
+ - **对象存储**：MinIO（第一阶段），使用标准AWS S3 SDK接入（兼容S3协议）
+ - **文档数据库**：第一阶段不接入MongoDB
+ - **时序数据库**：第一阶段不接入InfluxDB
 
 #### 2.2.4 基础设施
-- **容器化**：Docker + Kubernetes
-- **服务网格**：Istio（可选）
-- **监控告警**：Prometheus + Grafana
-- **日志收集**：ELK Stack（Elasticsearch + Logstash + Kibana）
-- **链路追踪**：Jaeger/Zipkin
+ - **容器化**：Docker + Docker Compose（第一阶段）
+ - **Kubernetes**：第二阶段再考虑支持Helm部署
+ - **服务网格**：第一阶段不接入
+ - **监控告警**：第一阶段不纳入MVP
+ - **日志收集**：第一阶段不纳入MVP（基础应用日志保留）
+ - **链路追踪**：第一阶段不纳入MVP
 
-## 3. 微服务设计
+## 3. 后端模块设计
 
-### 3.1 服务拆分
+### 3.1 模块划分
 
-#### 3.1.1 用户服务（User Service）
-```yaml
-服务名称: user-service
-端口: 8001
-数据库: user_db
-功能:
-  - 用户注册/登录
-  - 用户信息管理
-  - 组织架构管理
-  - 权限管理
-  - 用户认证授权
-```
+#### 用户模块
+ - 用户注册/登录
+ - 用户信息管理
+ - 组织架构与权限管理
+ - 认证授权
 
-#### 3.1.2 会议服务（Meeting Service）
-```yaml
-服务名称: meeting-service
-端口: 8002
-数据库: meeting_db
-功能:
-  - 会议预约管理
-  - 会议状态管理
-  - 会议冲突检测
-  - 会议审批流程
-  - 会议统计分析
-```
+#### 会议模块
+ - 会议预约与状态管理
+ - 冲突检测
+ - 审批流程
+ - 统计分析
 
-#### 3.1.3 会议室服务（Room Service）
-```yaml
-服务名称: room-service
-端口: 8003
-数据库: room_db
-功能:
-  - 会议室信息管理
-  - 会议室状态管理
-  - 设备管理
-  - 会议室预订
-  - 资源分配算法
-```
+#### 会议室模块
+ - 会议室信息与状态管理
+ - 设备管理
+ - 预订与资源分配算法
 
-#### 3.1.4 通知服务（Notification Service）
-```yaml
-服务名称: notification-service
-端口: 8004
-数据库: notification_db
-功能:
-  - 邮件通知
-  - 短信通知
-  - 站内消息
-  - 推送通知
-  - 通知模板管理
-```
+#### 通知模块
+ - 邮件、短信、站内消息、推送通知
+ - 通知模板管理
 
-#### 3.1.5 审计服务（Audit Service）
-```yaml
-服务名称: audit-service
-端口: 8005
-数据库: audit_db
-功能:
-  - 操作日志记录
-  - 审计日志查询
-  - 合规性检查
-  - 异常行为检测
-  - 审计报表生成
-消息队列: RocketMQ（异步日志处理）
-```
+#### 审计模块
+ - 操作日志记录与查询
+ - 合规性检查
+ - 异常行为检测
+ - 审计报表（第二阶段）
 
-#### 3.1.6 文件服务（File Service）
-```yaml
-服务名称: file-service
-端口: 8006
-存储: MinIO/S3
-功能:
-  - 文件上传/下载
-  - 文件存储管理
-  - 文件权限控制
-  - 文件版本管理
-  - 文件预览服务
-```
+#### 文件模块
+ - 文件上传/下载
+ - 存储管理与权限控制
+ - 版本管理与预览
+ - MinIO接入（S3 SDK）
 
-### 3.2 服务间通信
+#### AI预约模块
+ - 自然语言理解与槽位填充
+ - 对话编排与澄清提问
+ - 与会议/会议室模块的实时校验与冲突检测
+ - 预约摘要生成与确认
+ - 表单/对话上下文保留与切换
+ - 安全防护（提示注入、防越权、敏感信息过滤）
+
+### 3.2 模块间通信
 
 #### 3.2.1 同步通信
-- **REST API**：基于HTTP/HTTPS的RESTful API
-- **GraphQL**：复杂查询场景（可选）
-- **gRPC**：高性能内部服务通信
+ - 模块内调用：NestJS模块间直接调用（依赖注入）
+ - REST API：对外提供HTTP/HTTPS的RESTful API
+ - GraphQL：复杂查询场景（可选）
 
-#### 3.2.2 异步通信
-- **消息队列**：基于RocketMQ 5.0的异步消息（阿里巴巴开源，高性能、高可靠）
-- **事件驱动**：基于领域事件的服务协作
-- **发布订阅**：基于RocketMQ的发布订阅模式
-- **消息类型**：
-  - 会议预约事件（MeetingCreatedEvent）
-  - 会议变更事件（MeetingUpdatedEvent）
-  - 会议取消事件（MeetingCancelledEvent）
-  - 审批流程事件（ApprovalProcessEvent）
-  - 通知发送事件（NotificationSendEvent）
+#### 3.2.2 异步通信（第二阶段）
+ - 消息队列：RocketMQ 5.3.x
+ - 事件驱动：领域事件协作
+ - 发布订阅：消息主题订阅
+ - 消息类型：MeetingCreated/Updated/Cancelled、ApprovalProcess、NotificationSend
 
 ## 4. 数据库设计
 
@@ -424,26 +385,19 @@ services:
     networks:
       - meeting-network
 
-  # RocketMQ NameServer
-  rocketmq-nameserver:
-    image: apache/rocketmq:5.3.2
-    container_name: meeting-rocketmq-nameserver
-    command: sh mqnamesrv
+  # MinIO对象存储（使用AWS S3 SDK接入）
+  minio:
+    image: minio/minio:latest
+    container_name: meeting-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - minio_data:/data
     ports:
-      - "9876:9876"
-    networks:
-      - meeting-network
-
-  # RocketMQ Broker
-  rocketmq-broker:
-    image: apache/rocketmq:5.3.2
-    container_name: meeting-rocketmq-broker
-    command: sh mqbroker -n rocketmq-nameserver:9876
-    depends_on:
-      - rocketmq-nameserver
-    ports:
-      - "10911:10911"
-      - "10912:10912"
+      - "9000:9000"
+      - "9001:9001"
     networks:
       - meeting-network
 
@@ -462,17 +416,19 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      ROCKETMQ_NAMESERVER: rocketmq-nameserver:9876
       JWT_SECRET: ${JWT_SECRET}
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET}
     ports:
       - "3000:3000"
     depends_on:
       - postgres
       - redis
-      - rocketmq-broker
+      - minio
     networks:
       - meeting-network
-
   # 前端Web服务
   web-service:
     build: ./web
@@ -505,6 +461,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
 
 networks:
   meeting-network:
