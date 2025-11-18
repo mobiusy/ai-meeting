@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,9 +10,17 @@ const api = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // 从zustand的localStorage存储中获取token
+    const authData = localStorage.getItem('auth-storage');
+    if (authData) {
+      try {
+        const parsed = JSON.parse(authData);
+        if (parsed.state?.token) {
+          config.headers.Authorization = `Bearer ${parsed.state.token}`;
+        }
+      } catch (error) {
+        console.error('解析认证数据失败:', error);
+      }
     }
     return config;
   },
@@ -28,7 +36,8 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      // 清除zustand存储的认证数据
+      localStorage.removeItem('auth-storage');
       window.location.href = '/login';
     }
     return Promise.reject(error);
