@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL 数据库
+  # PostgreSQL 数据库 - 基础服务，总是启动
   postgres:
     image: postgres:17-alpine
     container_name: meeting-postgres
@@ -17,7 +17,7 @@ services:
     networks:
       - meeting-network
 
-  # Redis 缓存
+  # Redis 缓存 - 基础服务，总是启动
   redis:
     image: redis:8-alpine
     container_name: meeting-redis
@@ -29,7 +29,7 @@ services:
     networks:
       - meeting-network
 
-  # MinIO 对象存储
+  # MinIO 对象存储 - 基础服务，总是启动
   minio:
     image: minio/minio:latest
     container_name: meeting-minio
@@ -46,8 +46,11 @@ services:
     networks:
       - meeting-network
 
-  # 后端API
+  # 后端API - 属于 app 配置文件，可以通过 profile 控制
   backend:
+    profiles:
+      - app
+      - full
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -73,8 +76,11 @@ services:
     networks:
       - meeting-network
 
-  # 前端应用
+  # 前端应用 - 属于 app 配置文件，可以通过 profile 控制
   frontend:
+    profiles:
+      - app
+      - full
     build:
       context: .
       dockerfile: Dockerfile.frontend
@@ -87,8 +93,11 @@ services:
     networks:
       - meeting-network
 
-  # Nginx 反向代理
+  # Nginx 反向代理 - 属于 app 配置文件，可以通过 profile 控制
   nginx:
+    profiles:
+      - app
+      - full
     image: nginx:alpine
     container_name: meeting-nginx
     restart: always

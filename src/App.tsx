@@ -4,6 +4,9 @@ import MainLayout from "@/layouts/MainLayout";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import MeetingRooms from "@/pages/MeetingRooms";
+import MeetingRoomForm from "@/pages/MeetingRoomForm";
+import MeetingRoomDetail from "@/pages/MeetingRoomDetail";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -26,7 +29,10 @@ export default function App() {
         >
           <Route index element={<Home />} />
           <Route path="meetings" element={<div>会议管理页面 - 开发中</div>} />
-          <Route path="rooms" element={<div>会议室页面 - 开发中</div>} />
+          <Route path="rooms" element={<MeetingRooms />} />
+          <Route path="rooms/new" element={<MeetingRoomForm />} />
+          <Route path="rooms/:id" element={<MeetingRoomDetail />} />
+          <Route path="rooms/:id/edit" element={<MeetingRoomForm />} />
         </Route>
       </Routes>
     </Router>

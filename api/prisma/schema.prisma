@@ -41,18 +41,26 @@ model Department {
 model MeetingRoom {
   id          String   @id @default(cuid())
   name        String   @unique
+  code        String   @unique // 会议室编号
   capacity    Int
   location    String
+  floor       String?  // 楼层信息
   description String?
-  equipment   String // JSON array of equipment
-  images      String // JSON array of image URLs
+  equipment   Json     // JSON array of equipment objects
+  images      Json     // JSON array of image objects with url, name, size
   status      RoomStatus @default(AVAILABLE)
+  bookingRules Json?   // 预订规则配置
+  minDuration Int?     // 最小预订时长（分钟）
+  maxDuration Int?     // 最大预订时长（分钟）
+  needApproval Boolean @default(false) // 是否需要审批
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   meetings Meeting[]
 
   @@map("meeting_rooms")
+  @@index([status])
+  @@index([capacity])
 }
 
 model Meeting {
