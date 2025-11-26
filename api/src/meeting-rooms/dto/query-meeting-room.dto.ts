@@ -1,4 +1,5 @@
 import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class QueryMeetingRoomDto {
@@ -16,12 +17,14 @@ export class QueryMeetingRoomDto {
   @IsOptional()
   @IsInt()
   @Min(1)
+  @Type(() => Number)
   minCapacity?: number;
 
   @ApiProperty({ description: '最大容量', required: false, example: 50 })
   @IsOptional()
   @IsInt()
   @Max(200)
+  @Type(() => Number)
   maxCapacity?: number;
 
   @ApiProperty({ description: '位置筛选', required: false })
@@ -38,6 +41,7 @@ export class QueryMeetingRoomDto {
   @IsOptional()
   @IsInt()
   @Min(1)
+  @Type(() => Number)
   page?: number = 1;
 
   @ApiProperty({ description: '每页条数', required: false, default: 10 })
@@ -45,5 +49,14 @@ export class QueryMeetingRoomDto {
   @IsInt()
   @Min(1)
   @Max(100)
+  @Type(() => Number)
   limit?: number = 10;
+
+  @ApiProperty({ description: '每页条数(pageSize别名)', required: false, default: 10 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @Type(() => Number)
+  pageSize?: number;
 }

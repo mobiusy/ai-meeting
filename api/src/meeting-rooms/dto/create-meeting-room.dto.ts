@@ -1,5 +1,25 @@
-import { IsString, IsInt, IsOptional, IsBoolean, IsJSON, Min, Max } from 'class-validator';
+import { IsString, IsInt, IsOptional, IsBoolean, Min, Max, IsArray, ValidateNested, IsUrl } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+
+export class ImageDto {
+  @ApiProperty({ description: '图片URL', example: 'http://localhost:9000/meeting-system/images/xxx.jpg' })
+  @IsUrl({ require_tld: false })
+  url: string;
+
+  @ApiProperty({ description: '图片名称', example: '城市实景.jpg' })
+  @IsString()
+  name: string;
+
+  @ApiProperty({ description: '图片大小（字节）', example: 2550113 })
+  @IsInt()
+  size: number;
+
+  @ApiProperty({ description: '图片类型', example: 'image/jpeg', required: false })
+  @IsOptional()
+  @IsString()
+  type?: string;
+}
 
 export class CreateMeetingRoomDto {
   @ApiProperty({ description: '会议室名称', example: '大会议室A' })
@@ -63,4 +83,23 @@ export class CreateMeetingRoomDto {
   @IsOptional()
   @IsBoolean()
   needApproval?: boolean;
+
+  @ApiProperty({
+    description: '图片列表',
+    required: false,
+    type: [ImageDto],
+    example: [
+      {
+        url: 'http://localhost:9000/meeting-system/images/1764137253624-vgsw9f4vd7.jpg',
+        name: '城市实景.jpg',
+        size: 2550113,
+        type: 'image/jpeg'
+      }
+    ]
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ImageDto)
+  images?: ImageDto[];
 }

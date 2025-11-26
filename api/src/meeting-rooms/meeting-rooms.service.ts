@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateMeetingRoomDto } from './dto/create-meeting-room.dto';
 import { UpdateMeetingRoomDto } from './dto/update-meeting-room.dto';
 import { QueryMeetingRoomDto } from './dto/query-meeting-room.dto';
-import { RoomStatus } from '@prisma/client';
+import { Prisma, RoomStatus } from '@prisma/client';
 
 @Injectable()
 export class MeetingRoomsService {
@@ -24,19 +24,22 @@ export class MeetingRoomsService {
       throw new ConflictException('会议室名称或编号已存在');
     }
 
+    const { images, ...rest } = createMeetingRoomDto as any;
+
     return this.prisma.meetingRoom.create({
       data: {
-        ...createMeetingRoomDto,
-        equipment: createMeetingRoomDto.equipment || [],
-        images: [],
-        bookingRules: createMeetingRoomDto.bookingRules || {},
-        status: createMeetingRoomDto.status as RoomStatus || RoomStatus.AVAILABLE,
+        ...rest,
+        equipment: rest.equipment || [],
+        images: (images ?? []) as unknown as Prisma.InputJsonValue,
+        bookingRules: rest.bookingRules || {},
+        status: rest.status as RoomStatus || RoomStatus.AVAILABLE,
       }
     });
   }
 
   async findAll(query: QueryMeetingRoomDto) {
-    const { keyword, status, minCapacity, maxCapacity, location, floor, page = 1, limit = 10 } = query;
+    const { keyword, status, minCapacity, maxCapacity, location, floor, page = 1, limit = 10, pageSize } = query as any;
+    const effLimit = pageSize ?? limit ?? 10;
     
     const where: any = {};
 
@@ -75,8 +78,8 @@ export class MeetingRoomsService {
     const [data, total] = await Promise.all([
       this.prisma.meetingRoom.findMany({
         where,
-        skip: (page - 1) * limit,
-        take: limit,
+        skip: (page - 1) * effLimit,
+        take: effLimit,
         orderBy: { createdAt: 'desc' }
       }),
       this.prisma.meetingRoom.count({ where })
@@ -86,8 +89,8 @@ export class MeetingRoomsService {
       data,
       total,
       page,
-      limit,
-      totalPages: Math.ceil(total / limit)
+      limit: effLimit,
+      totalPages: Math.ceil(total / effLimit)
     };
   }
 
@@ -128,11 +131,14 @@ export class MeetingRoomsService {
       }
     }
 
+    const { images, ...rest } = updateMeetingRoomDto as any;
+
     return this.prisma.meetingRoom.update({
       where: { id },
       data: {
-        ...updateMeetingRoomDto,
-        status: updateMeetingRoomDto.status as RoomStatus || undefined,
+        ...rest,
+        ...(images !== undefined ? { images: images as unknown as Prisma.InputJsonValue } : {}),
+        status: rest.status as RoomStatus || undefined,
       }
     });
   }

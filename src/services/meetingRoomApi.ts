@@ -55,36 +55,45 @@ export const meetingRoomApi = {
   // 获取会议室列表
   async getList(params: QueryMeetingRoomParams = {}): Promise<MeetingRoomListResponse> {
     const response = await api.get('/meeting-rooms', { params });
-    return response.data;
+    const payload = response.data;
+    return {
+      success: true,
+      data: {
+        list: payload.data ?? [],
+        total: payload.total ?? 0,
+        page: payload.page ?? 1,
+        pageSize: payload.limit ?? params.pageSize ?? 10,
+      },
+    };
   },
 
   // 获取会议室详情
   async getById(id: string): Promise<MeetingRoomResponse> {
     const response = await api.get(`/meeting-rooms/${id}`);
-    return response.data;
+    return { success: true, data: response.data };
   },
 
   // 创建会议室
   async create(data: CreateMeetingRoomData): Promise<MeetingRoomResponse> {
     const response = await api.post('/meeting-rooms', data);
-    return response.data;
+    return { success: true, data: response.data };
   },
 
   // 更新会议室
   async update(id: string, data: UpdateMeetingRoomData): Promise<MeetingRoomResponse> {
     const response = await api.patch(`/meeting-rooms/${id}`, data);
-    return response.data;
+    return { success: true, data: response.data };
   },
 
   // 删除会议室
   async delete(id: string): Promise<{ success: boolean }> {
-    const response = await api.delete(`/meeting-rooms/${id}`);
-    return response.data;
+    await api.delete(`/meeting-rooms/${id}`);
+    return { success: true };
   },
 
   // 更新会议室状态
   async updateStatus(id: string, status: string): Promise<MeetingRoomResponse> {
     const response = await api.patch(`/meeting-rooms/${id}/status`, { status });
-    return response.data;
+    return { success: true, data: response.data };
   },
 };

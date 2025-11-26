@@ -16,7 +16,9 @@ export class UploadService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.ensureBucket();
+    try {
+      await this.ensureBucket();
+    } catch (_) { }
   }
 
   async uploadFile(key: string, buffer: Buffer, contentType: string) {

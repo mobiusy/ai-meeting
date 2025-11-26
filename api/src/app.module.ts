@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { TerminusModule } from '@nestjs/terminus';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -9,6 +10,8 @@ import { UsersModule } from './users/users.module';
 import { MeetingRoomsModule } from './meeting-rooms/meeting-rooms.module';
 import { MeetingsModule } from './meetings/meetings.module';
 import { UploadModule } from './upload/upload.module';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
   imports: [
@@ -27,6 +30,10 @@ import { UploadModule } from './upload/upload.module';
     MeetingRoomsModule,
     MeetingsModule,
     UploadModule,
+  ],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
 export class AppModule {}
