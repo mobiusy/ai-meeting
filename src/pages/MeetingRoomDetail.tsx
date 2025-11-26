@@ -14,6 +14,12 @@ export default function MeetingRoomDetail() {
   const { id } = useParams();
   const { setCurrentRoom } = useMeetingRoomStore();
 
+  const toProxyUrl = (url: string) => `/api/upload/proxy?url=${encodeURIComponent(url)}`;
+  const getImageSrc = (url: string) => {
+    if (!url) return '';
+    return toProxyUrl(url);
+  };
+
   useEffect(() => {
     if (id) {
       fetchMeetingRoom();
@@ -155,7 +161,7 @@ export default function MeetingRoomDetail() {
                     key={index}
                     width={200}
                     height={150}
-                    src={image.url}
+                    src={getImageSrc(image.url)}
                     alt={image.name}
                     className="object-cover rounded"
                   />

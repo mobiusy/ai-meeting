@@ -1,19 +1,21 @@
-import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Get, Query, Res, HttpStatus } from '@nestjs/common';
 import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { UploadService } from './upload.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 
 @ApiTags('文件上传')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('upload')
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) { }
+  constructor(private readonly uploadService: UploadService, private readonly configService: ConfigService) { }
 
   @Post('image')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: '上传图片' })
   @ApiConsumes('multipart/form-data')
@@ -54,6 +56,7 @@ export class UploadController {
   }
 
   @Post('document')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: '上传文档' })
   @ApiConsumes('multipart/form-data')
@@ -97,5 +100,36 @@ export class UploadController {
         mimetype: file.mimetype,
       },
     };
+  }
+
+  @Get('proxy')
+  @ApiOperation({ summary: '图片代理' })
+  async proxy(@Query('url') url: string, @Res() res: Response) {
+    if (!url) {
+      return res.status(HttpStatus.BAD_REQUEST).json({ message: 'url 参数不能为空' });
+    }
+    try {
+      const parsed = new URL(url.startsWith('http') ? url : `http://${url}`);
+      const endpoint = this.configService.get('MINIO_ENDPOINT');
+      const endpointUrl = endpoint && (endpoint.startsWith('http') ? new URL(endpoint) : new URL(`http://${endpoint}`));
+      const allowedHost = endpointUrl ? endpointUrl.host : undefined;
+      if (allowedHost && parsed.host !== allowedHost) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: '不允许的目标主机' });
+      }
+      const path = parsed.pathname.replace(/^\//, '');
+      const parts = path.split('/');
+      const bucket = parts.shift();
+      const key = parts.join('/');
+      const configuredBucket = this.configService.get('MINIO_BUCKET', 'meeting-system');
+      if (!bucket || !key || bucket !== configuredBucket) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: '无效的资源路径' });
+      }
+      const obj = await this.uploadService.getObject(key);
+      res.setHeader('Content-Type', obj.contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      (obj.stream as any).pipe(res);
+    } catch (_) {
+      return res.status(HttpStatus.BAD_GATEWAY).end();
+    }
   }
 }

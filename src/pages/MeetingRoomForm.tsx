@@ -22,6 +22,12 @@ export default function MeetingRoomForm() {
   const isEdit = !!id;
   const { addRoom, updateRoom } = useMeetingRoomStore();
 
+  const toProxyUrl = (url: string) => `/api/upload/proxy?url=${encodeURIComponent(url)}`;
+  const getImageSrc = (url: string) => {
+    if (!url) return '';
+    return toProxyUrl(url);
+  };
+
   useEffect(() => {
     if (isEdit) {
       fetchMeetingRoom();
@@ -352,7 +358,7 @@ export default function MeetingRoomForm() {
                 {imageList.map((image, index) => (
                   <div key={index} className="relative">
                     <img
-                      src={image.url}
+                      src={getImageSrc(image.url)}
                       alt={image.name}
                       className="w-24 h-24 object-cover rounded"
                     />

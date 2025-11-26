@@ -46,6 +46,18 @@ export class UploadService implements OnModuleInit {
     return getSignedUrl(this.s3Client, command, { expiresIn });
   }
 
+  async getObject(key: string) {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
+    const output = await this.s3Client.send(command);
+    return {
+      stream: output.Body as any,
+      contentType: output.ContentType || 'application/octet-stream',
+    };
+  }
+
   async deleteFile(key: string) {
     const command = new DeleteObjectCommand({
       Bucket: this.bucket,

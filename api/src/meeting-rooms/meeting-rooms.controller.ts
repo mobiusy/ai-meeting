@@ -36,7 +36,7 @@ export class MeetingRoomsController {
   @ApiOperation({ summary: '获取会议室详情' })
   @ApiResponse({ status: 200, description: '获取会议室详情成功' })
   @ApiResponse({ status: 404, description: '会议室不存在' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id') id: string) {
     return this.meetingRoomsService.findOne(id);
   }
 
@@ -47,7 +47,7 @@ export class MeetingRoomsController {
   @ApiResponse({ status: 404, description: '会议室不存在' })
   @ApiResponse({ status: 409, description: '会议室名称或编号已存在' })
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() updateMeetingRoomDto: UpdateMeetingRoomDto
   ) {
     return this.meetingRoomsService.update(id, updateMeetingRoomDto);
@@ -60,7 +60,7 @@ export class MeetingRoomsController {
   @ApiResponse({ status: 204, description: '会议室删除成功' })
   @ApiResponse({ status: 404, description: '会议室不存在' })
   @ApiResponse({ status: 409, description: '会议室已被使用，无法删除' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
+  async remove(@Param('id') id: string) {
     await this.meetingRoomsService.remove(id);
   }
 
@@ -70,7 +70,7 @@ export class MeetingRoomsController {
   @ApiResponse({ status: 200, description: '状态更新成功' })
   @ApiResponse({ status: 404, description: '会议室不存在' })
   updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body('status') status: string
   ) {
     return this.meetingRoomsService.updateStatus(id, status as any);
