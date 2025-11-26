@@ -1,4 +1,5 @@
-import { Controller, Post, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException } from '@nestjs/common';
+import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { UploadService } from './upload.service';
@@ -13,7 +14,7 @@ export class UploadController {
   constructor(private readonly uploadService: UploadService) { }
 
   @Post('image')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: '上传图片' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -30,12 +31,12 @@ export class UploadController {
   })
   async uploadImage(@UploadedFile() file: any) {
     if (!file) {
-      throw new Error('文件不能为空');
+      throw new BadRequestException('文件不能为空');
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new Error('不支持的图片格式');
+      throw new BadRequestException('不支持的图片格式');
     }
 
     const key = this.uploadService.generateKey('images', file.originalname);
@@ -53,7 +54,7 @@ export class UploadController {
   }
 
   @Post('document')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: '上传文档' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -70,7 +71,7 @@ export class UploadController {
   })
   async uploadDocument(@UploadedFile() file: any) {
     if (!file) {
-      throw new Error('文件不能为空');
+      throw new BadRequestException('文件不能为空');
     }
 
     const allowedTypes = [
@@ -81,7 +82,7 @@ export class UploadController {
     ];
 
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new Error('不支持的文档格式');
+      throw new BadRequestException('不支持的文档格式');
     }
 
     const key = this.uploadService.generateKey('documents', file.originalname);

@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand, CreateBucketCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject } from '@nestjs/common';
 
 @Injectable()
-export class UploadService {
+export class UploadService implements OnModuleInit {
   private readonly bucket: string;
 
   constructor(
@@ -15,7 +15,12 @@ export class UploadService {
     this.bucket = this.configService.get('MINIO_BUCKET', 'meeting-system');
   }
 
+  async onModuleInit() {
+    await this.ensureBucket();
+  }
+
   async uploadFile(key: string, buffer: Buffer, contentType: string) {
+    await this.ensureBucket();
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
@@ -54,5 +59,29 @@ export class UploadService {
     const randomString = Math.random().toString(36).substring(2, 15);
     const extension = filename.split('.').pop();
     return `${prefix}/${timestamp}-${randomString}.${extension}`;
+  }
+
+  private async ensureBucket() {
+    try {
+      await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+    } catch (_) {
+      const region = this.configService.get('AWS_REGION', 'us-east-1');
+      try {
+        await this.s3Client.send(
+          new CreateBucketCommand({
+            Bucket: this.bucket,
+            CreateBucketConfiguration: region === 'us-east-1' ? undefined : { LocationConstraint: region },
+          })
+        );
+      } catch (err: any) {
+        const name = err?.name;
+        if (name === 'BucketAlreadyOwnedByYou' || name === 'BucketAlreadyExists') {
+          return;
+        }
+        throw err;
+      }
+      // ensure consistency
+      await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+    }
   }
 }
