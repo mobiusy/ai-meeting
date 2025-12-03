@@ -208,6 +208,17 @@ MINIO_BUCKET=meeting-system
 
 # 其他
 FRONTEND_URL=http://localhost:3000
+
+# 邮件通知（SMTP）
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=user@example.com
+SMTP_PASS=change-me
+SMTP_SECURE=false
+NOTIFY_FROM_EMAIL=noreply@example.com
+
+# 会议审批阈值
+APPROVAL_THRESHOLD=20
 ```
 
 ### 前端环境变量 (.env)

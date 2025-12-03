@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsOptional, IsEnum } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, IsEnum, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
@@ -14,6 +14,7 @@ export class CreateUserDto {
   @ApiProperty({ example: 'password123', description: '用户密码', minLength: 6 })
   @IsString()
   @MinLength(6)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/,{ message: '密码需包含大小写字母和数字' })
   password: string;
 
   @ApiProperty({ example: 'ADMIN', description: '用户角色', required: false, enum: Role })

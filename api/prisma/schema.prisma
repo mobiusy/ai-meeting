@@ -103,6 +103,21 @@ model MeetingParticipant {
   @@map("meeting_participants")
 }
 
+model MeetingApproval {
+  id         String   @id @default(cuid())
+  action     ApprovalAction
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  meetingId String
+
+  approver  User     @relation(fields: [approverId], references: [id])
+  approverId String
+
+  @@map("meeting_approvals")
+}
+
 enum Role {
   ADMIN
   MANAGER
@@ -122,6 +137,7 @@ enum MeetingStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  PENDING_APPROVAL
 }
 
 enum ParticipantStatus {
@@ -129,4 +145,9 @@ enum ParticipantStatus {
   ACCEPTED
   REJECTED
   ATTENDED
+}
+
+enum ApprovalAction {
+  APPROVED
+  REJECTED
 }

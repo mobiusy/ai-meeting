@@ -44,6 +44,10 @@ export class AuthController {
     },
   })
   async register(@Body() createUserDto: CreateUserDto) {
+    if (createUserDto.role === 'GUEST') {
+      const { BadRequestException } = await import('@nestjs/common');
+      throw new BadRequestException('不允许注册访客角色');
+    }
     const user = await this.usersService.create(createUserDto);
     return {
       success: true,

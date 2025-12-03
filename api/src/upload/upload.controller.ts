@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Get, Query, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException, InternalServerErrorException, UnauthorizedException, Get, Query, Res, HttpStatus, Request } from '@nestjs/common';
 import { memoryStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
@@ -15,7 +15,6 @@ export class UploadController {
   constructor(private readonly uploadService: UploadService, private readonly configService: ConfigService) { }
 
   @Post('image')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: '上传图片' })
   @ApiConsumes('multipart/form-data')
@@ -31,14 +30,16 @@ export class UploadController {
       },
     },
   })
-  async uploadImage(@UploadedFile() file: any) {
+  async uploadImage(@UploadedFile() file: any, @Request() req: any) {
+    const auth = req.headers['authorization'] || req.headers['Authorization']
+    if (!auth) throw new UnauthorizedException()
     if (!file) {
-      throw new BadRequestException('文件不能为空');
+      throw new InternalServerErrorException('文件不能为空');
     }
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new BadRequestException('不支持的图片格式');
+      throw new InternalServerErrorException('不支持的图片格式');
     }
 
     const key = this.uploadService.generateKey('images', file.originalname);
@@ -56,7 +57,6 @@ export class UploadController {
   }
 
   @Post('document')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiOperation({ summary: '上传文档' })
   @ApiConsumes('multipart/form-data')
@@ -72,9 +72,11 @@ export class UploadController {
       },
     },
   })
-  async uploadDocument(@UploadedFile() file: any) {
+  async uploadDocument(@UploadedFile() file: any, @Request() req: any) {
+    const auth = req.headers['authorization'] || req.headers['Authorization']
+    if (!auth) throw new UnauthorizedException()
     if (!file) {
-      throw new BadRequestException('文件不能为空');
+      throw new InternalServerErrorException('文件不能为空');
     }
 
     const allowedTypes = [
@@ -85,7 +87,7 @@ export class UploadController {
     ];
 
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new BadRequestException('不支持的文档格式');
+      throw new InternalServerErrorException('不支持的文档格式');
     }
 
     const key = this.uploadService.generateKey('documents', file.originalname);

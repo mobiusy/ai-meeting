@@ -90,6 +90,25 @@ docker-compose build backend
 
 基础服务使用默认配置，应用服务的环境变量可以在 docker-compose.yml 文件中修改。
 
+### 应用服务环境变量清单
+
+后端（backend）支持以下环境变量：
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `REDIS_URL`
+- `MINIO_ENDPOINT`
+- `MINIO_ACCESS_KEY`
+- `MINIO_SECRET_KEY`
+- `MINIO_BUCKET`
+- `FRONTEND_URL`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_SECURE`（`true`/`false`）
+- `NOTIFY_FROM_EMAIL`
+- `APPROVAL_THRESHOLD`（超过该人数需审批）
+
 ## 数据持久化
 
 所有基础服务的数据都会持久化到 Docker volumes：

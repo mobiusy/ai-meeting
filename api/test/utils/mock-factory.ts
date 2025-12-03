@@ -11,8 +11,9 @@ export interface CreateUserData {
 
 export class MockFactory {
   static createUser(overrides?: Partial<CreateUserData>): CreateUserData {
+    const rand = Math.random().toString(36).slice(2, 8)
     return {
-      email: 'test@example.com',
+      email: overrides?.email ?? `test+${Date.now()}-${rand}@example.com`,
       name: '测试用户',
       password: 'Test123456',
       role: 'EMPLOYEE',
@@ -21,9 +22,10 @@ export class MockFactory {
   }
 
   static createAdminUser(overrides?: Partial<CreateUserData>): CreateUserData {
+    const rand = Math.random().toString(36).slice(2, 8)
     return {
       ...this.createUser(),
-      email: 'admin@example.com',
+      email: overrides?.email ?? `admin+${Date.now()}-${rand}@example.com`,
       name: '管理员',
       role: 'ADMIN',
       ...overrides

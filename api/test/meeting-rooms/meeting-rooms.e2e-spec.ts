@@ -27,7 +27,7 @@ describe('MeetingRoomsController (e2e)', () => {
     const user = await TestAuth.createAuthenticatedUser();
     authToken = user.token;
     
-    const admin = await TestAuth.createAuthenticatedUser({ role: 'ADMIN' });
+    const admin = await TestAuth.createAuthenticatedUser({ role: 'ADMIN', email: 'admin@example.com' });
     adminToken = admin.token;
   });
 

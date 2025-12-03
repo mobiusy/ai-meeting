@@ -67,6 +67,13 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: meeting-system
       FRONTEND_URL: http://localhost:3000
+      SMTP_HOST: smtp.example.com
+      SMTP_PORT: 587
+      SMTP_USER: user@example.com
+      SMTP_PASS: change-me
+      SMTP_SECURE: "false"
+      NOTIFY_FROM_EMAIL: noreply@example.com
+      APPROVAL_THRESHOLD: 20
     ports:
       - "3001:3001"
     depends_on:

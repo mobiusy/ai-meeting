@@ -30,7 +30,11 @@ export class TestAuth {
       .send(userData)
       .expect(201);
 
-    return response.body;
+    const body = response.body;
+    if (body && body.data && !body.user) {
+      body.user = body.data;
+    }
+    return body;
   }
 
   static async createAuthenticatedUser(overrides?: any) {
